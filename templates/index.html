@@ -14,15 +14,26 @@
         input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         button { width: 100%; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; margin-top: 10px; }
         button:hover { background: #219150; }
+        .alert { background: #e74c3c; color: white; padding: 10px; border-radius: 4px; margin-bottom: 15px; text-align: center; }
+        .admin-link { display: block; text-align: center; margin-top: 15px; font-size: 14px; color: #7f8c8d; text-decoration: none; }
+        .admin-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>Book an Appointment</h1>
-    
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
     <div class="info-box">
-        <div>🩺 <strong>Doctor available on:</strong> 10 AM to 3 PM</div>
+        <div>🩺 <strong>Doctor available on:</strong> {{ available_time }}</div>
         <div>📊 <strong>Total appointments recorded:</strong> {{ total }}</div>
     </div>
 
@@ -45,11 +56,24 @@
 
         <button type="submit">Confirm Appointment</button>
     </form>
+
+    <a href="/admin" class="admin-link">Doctor Login (Admin Portal)</a>
 </div>
 
 <script>
     // Automatically set the minimum date to today so patients can't pick past dates
-    document.getElementById('date').min = new Date().toISOString().split("T")[0];
+    const dateInput = document.getElementById('date');
+    dateInput.min = new Date().toISOString().split("T")[0];
+
+    // Blocked dates passed from backend
+    const blockedDates = {{ blocked_dates | tojson }};
+    
+    dateInput.addEventListener('change', function() {
+        if (blockedDates.includes(this.value)) {
+            alert('Sorry, the doctor is on leave or unavailable on this date. Please choose another date.');
+            this.value = ''; // Reset the input to prevent submission
+        }
+    });
 </script>
 
 </body>
